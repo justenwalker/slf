@@ -33,6 +33,15 @@ func TestChaning_panic_success(t *testing.T) {
 	slf.WithContext("context").Panic("")
 }
 
+func TestChaning_log_levelpanic_success(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("panic expecte")
+		}
+	}()
+	slf.WithContext("context").Log(slf.LevelPanic, "")
+}
+
 func TestChaning_panicf_success(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -40,4 +49,37 @@ func TestChaning_panicf_success(t *testing.T) {
 		}
 	}()
 	slf.WithContext("context").WithField("a", "b").Panicf("%v", "")
+}
+
+func TestExitProcessor_fatalf_success(t *testing.T) {
+	triggered := false
+	slf.ExitProcessor = func() {
+		triggered = true
+	}
+	slf.WithContext("context").Fatalf("%v", "")
+	if !triggered {
+		t.Error("Exit not triggered")
+	}
+}
+
+func TestExitProcessor_fatal_success(t *testing.T) {
+	triggered := false
+	slf.ExitProcessor = func() {
+		triggered = true
+	}
+	slf.WithContext("context").Fatal("a")
+	if !triggered {
+		t.Error("Exit not triggered")
+	}
+}
+
+func TestExitProcessor_log_levelfatal_success(t *testing.T) {
+	triggered := false
+	slf.ExitProcessor = func() {
+		triggered = true
+	}
+	slf.WithContext("context").Log(slf.LevelFatal, "a")
+	if !triggered {
+		t.Error("Exit not triggered")
+	}
 }

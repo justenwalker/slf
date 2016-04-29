@@ -13,6 +13,11 @@ import (
 // (except for panic in Panic and Panicf, and os.Exit(1) in Fatal and Fatalf).
 type Noop struct{}
 
+// ExitProcessor is executed on Log(LevelFatal) to terminate the application.
+var ExitProcessor = func() {
+	os.Exit(1)
+}
+
 // WithContext implements the Logger interface.
 func (log *Noop) WithContext(string) StructuredLogger {
 	return log
@@ -39,7 +44,12 @@ func (log *Noop) WithError(error) Logger {
 }
 
 // Log implements the Logger interface.
-func (log *Noop) Log(Level, string) Tracer {
+func (log *Noop) Log(level Level, message string) Tracer {
+	if level == LevelPanic {
+		panic(errors.New(message))
+	} else if level == LevelFatal {
+		ExitProcessor()
+	}
 	return log
 }
 
@@ -94,13 +104,13 @@ func (*Noop) Panicf(message string, args ...interface{}) {
 }
 
 // Fatal implements the Logger interface.
-func (*Noop) Fatal(message string) {
-	os.Exit(1)
+func (*Noop) Fatal(string) {
+	ExitProcessor()
 }
 
 // Fatalf implements the Logger interface.
-func (*Noop) Fatalf(message string, args ...interface{}) {
-	os.Exit(1)
+func (*Noop) Fatalf(string, ...interface{}) {
+	ExitProcessor()
 }
 
 // Trace implements the Logger interface.
